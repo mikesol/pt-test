@@ -22,7 +22,7 @@ const ascribeBehavior = (args, name) => args.indexOf(name+"_"+SUCCEEDS) !== -1
   : DETERMINISTIC;
 
 module.exports = {
-  check: (...args) => {
+  check: async (...args) => {
     const foo_behavior = ascribeBehavior(args, "fooapi");
     const bar_behavior = ascribeBehavior(args, "barapi");
     const foo_success_props = [
@@ -62,7 +62,7 @@ module.exports = {
         ? bar_success_props
         : bar_behavior === FAILS
         ? bar_failure_props
-        : [fc.constant(bar_default_props)]).concat([(...inner) => {
+        : [fc.constant(bar_default_props)]).concat([async (...inner) => {
           const barOffset = foo_behavior === SUCCEEDS ? 4 : 1;
           const um = {
             fooapi:{responseBody:undefined},
@@ -107,9 +107,10 @@ module.exports = {
               .get("/v1")
               .reply(200);
           }
-          args[args.length - 1](um);
+          await args[args.length - 1](um);
+          return true;
         }]);
-    fc.assert(fc.property(...props));
+    await fc.assert(fc.asyncProperty(...props));
   },
   on: () => (
     {
